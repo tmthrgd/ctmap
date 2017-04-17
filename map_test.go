@@ -194,3 +194,34 @@ func TestDelete(t *testing.T) {
 		}
 	}
 }
+
+func TestRange(t *testing.T) {
+	type kv struct {
+		key, val []byte
+	}
+
+	for _, c := range []struct {
+		m       [][]byte
+		entries []kv
+	}{
+		{nil, nil},
+		{[][]byte{{0, 0}}, []kv{{[]byte{0}, []byte{0}}}},
+		{[][]byte{{0x5a, 0xa5}}, []kv{{[]byte{0x5a}, []byte{0xa5}}}},
+		{[][]byte{{0x5a, 0x5a}, {0xa5, 0xa5}, {0x5a, 0xa5}}, []kv{{[]byte{0x5a}, []byte{0x5a}}, {[]byte{0xa5}, []byte{0xa5}}, {[]byte{0x5a}, []byte{0xa5}}}},
+		{[][]byte{{0xa5, 0x11}, {0xa5, 0x22}}, []kv{{[]byte{0xa5}, []byte{0x11}}, {[]byte{0xa5}, []byte{0x22}}}},
+	} {
+		m := &Map{m: c.m, keySize: 1, valSize: 1}
+
+		var entries []kv
+		m.Range(func(key, val []byte) {
+			entries = append(entries, kv{key, val})
+		})
+
+		if !reflect.DeepEqual(entries, c.entries) {
+			t.Error("Range failed")
+			t.Logf("expected: %02x", c.entries)
+			t.Logf("got:      %02x", entries)
+			t.Fatal()
+		}
+	}
+}

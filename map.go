@@ -256,3 +256,17 @@ func (m *Map) Delete(key []byte) int {
 
 	return v
 }
+
+// Range calls f for each entry in the map. f must be carefull
+// not to leak any timing information about the contents of key.
+//
+// If the map contains duplicate keys, f will be called once for
+// each key.
+//
+// The behaviour of the map is undefined if key or val are
+// modified.
+func (m *Map) Range(f func(key, val []byte)) {
+	for _, entry := range m.m {
+		f(entry[:m.keySize], entry[m.valSize:])
+	}
+}
