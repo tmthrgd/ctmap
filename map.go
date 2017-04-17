@@ -71,7 +71,7 @@ func (m *Map) Add(key, val []byte) {
 //
 // If there are multiple entries with the same key, each
 // will have it's value set to val.
-func (m *Map) Set(key, val []byte) (v int) {
+func (m *Map) Set(key, val []byte) int {
 	if len(key) != m.keySize {
 		panic("key has invalid size")
 	}
@@ -80,13 +80,15 @@ func (m *Map) Set(key, val []byte) (v int) {
 		panic("val has invalid size")
 	}
 
+	var v int
+
 	for _, entry := range m.m {
 		vv := subtle.ConstantTimeCompare(entry[:m.keySize], key)
 		subtle.ConstantTimeCopy(vv, entry[m.keySize:], val)
 		v |= vv
 	}
 
-	return
+	return v
 }
 
 // Replace replaces an existing entry in the map with a new
@@ -95,7 +97,7 @@ func (m *Map) Set(key, val []byte) (v int) {
 //
 // If there are duplicate entries matching oldKey, only the
 // first entry will be replaced.
-func (m *Map) Replace(oldKey, newKey, val []byte) (v int) {
+func (m *Map) Replace(oldKey, newKey, val []byte) int {
 	if len(oldKey) != m.keySize {
 		panic("oldKey has invalid size")
 	}
@@ -108,6 +110,8 @@ func (m *Map) Replace(oldKey, newKey, val []byte) (v int) {
 		panic("val has invalid size")
 	}
 
+	var v int
+
 	for _, entry := range m.m {
 		vv := subtle.ConstantTimeCompare(entry[:m.keySize], oldKey) &^ v
 		subtle.ConstantTimeCopy(vv, entry[:m.keySize], newKey)
@@ -115,7 +119,7 @@ func (m *Map) Replace(oldKey, newKey, val []byte) (v int) {
 		v |= vv
 	}
 
-	return
+	return v
 }
 
 // Rename is like Replace but it only changes they key and
@@ -123,7 +127,7 @@ func (m *Map) Replace(oldKey, newKey, val []byte) (v int) {
 //
 // If there are duplicate entries matching oldKey, only the
 // first entry's key will be replaced.
-func (m *Map) Rename(oldKey, newKey []byte) (v int) {
+func (m *Map) Rename(oldKey, newKey []byte) int {
 	if len(oldKey) != m.keySize {
 		panic("oldKey has invalid size")
 	}
@@ -132,28 +136,32 @@ func (m *Map) Rename(oldKey, newKey []byte) (v int) {
 		panic("newKey has invalid size")
 	}
 
+	var v int
+
 	for _, entry := range m.m {
 		vv := subtle.ConstantTimeCompare(entry[:m.keySize], oldKey) &^ v
 		subtle.ConstantTimeCopy(vv, entry[:m.keySize], newKey)
 		v |= vv
 	}
 
-	return
+	return v
 }
 
 // Contains determines if a key is present in the map in
 // constant-time. It returns 1 if the key is present, 0
 // otherwise.
-func (m *Map) Contains(key []byte) (v int) {
+func (m *Map) Contains(key []byte) int {
 	if len(key) != m.keySize {
 		panic("key has invalid size")
 	}
+
+	var v int
 
 	for _, entry := range m.m {
 		v |= subtle.ConstantTimeCompare(entry[:m.keySize], key)
 	}
 
-	return
+	return v
 }
 
 // Lookup finds the value associated with a key in
@@ -163,7 +171,7 @@ func (m *Map) Contains(key []byte) (v int) {
 //
 // If there are multiple entries matching key, only the
 // first will be returned.
-func (m *Map) Lookup(key, val []byte) (v int) {
+func (m *Map) Lookup(key, val []byte) int {
 	if len(key) != m.keySize {
 		panic("key has invalid size")
 	}
@@ -172,11 +180,13 @@ func (m *Map) Lookup(key, val []byte) (v int) {
 		panic("val has invalid size")
 	}
 
+	var v int
+
 	for _, entry := range m.m {
 		vv := subtle.ConstantTimeCompare(entry[:m.keySize], key) &^ v
 		subtle.ConstantTimeCopy(vv, val, entry[m.keySize:])
 		v |= vv
 	}
 
-	return
+	return v
 }
