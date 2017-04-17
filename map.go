@@ -251,5 +251,6 @@ func (m *Map) Delete(key []byte) int {
 
 	// XXX: Hopefully this slice is constant-time.
 	m.m = m.m[:len(m.m)-v]
+
 	return v
 }
