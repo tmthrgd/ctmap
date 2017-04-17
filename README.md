@@ -11,4 +11,10 @@ experiment. I can't even really see why anyone would ever want to do
 this. If this seems like the solution to your problem, you probably
 have the wrong problem. :information_desk_person:
 
-This was loosely inspired by [this article](https://wingolog.org/archives/2014/12/02/there-are-no-good-constant-time-data-structures '\'there are no good constant-time data structures\' (2 December 2014)') by [Andy Wingo](https://wingolog.org/about/).
+If you don't know how to safely use the
+[crypto/subtle package](https://golang.org/pkg/crypto/subtle/), you
+will never be able to use this package in a safe way.
+
+This was loosely inspired by
+[this article](https://wingolog.org/archives/2014/12/02/there-are-no-good-constant-time-data-structures '\'there are no good constant-time data structures\' (2 December 2014)')
+by [Andy Wingo](https://wingolog.org/about/).
