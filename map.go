@@ -118,11 +118,12 @@ func (m *Map) Replace(oldKey, newKey, val []byte) (v int) {
 	return
 }
 
-// ReplaceKey is like Replace but it leaves the value untouched.
+// Rename is like Replace but it only changes they key and
+// leaves the value untouched.
 //
 // If there are duplicate entries matching oldKey, only the
 // first entry's key will be replaced.
-func (m *Map) ReplaceKey(oldKey, newKey []byte) (v int) {
+func (m *Map) Rename(oldKey, newKey []byte) (v int) {
 	if len(oldKey) != m.keySize {
 		panic("oldKey has invalid size")
 	}

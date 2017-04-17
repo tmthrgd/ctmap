@@ -68,7 +68,7 @@ func TestReplace(t *testing.T) {
 	}
 }
 
-func TestReplaceKey(t *testing.T) {
+func TestRename(t *testing.T) {
 	for _, c := range []struct{ before, after [][]byte }{
 		{nil, nil},
 		{[][]byte{{0, 0}}, [][]byte{{0, 0}}},
@@ -77,10 +77,10 @@ func TestReplaceKey(t *testing.T) {
 		{[][]byte{{0xa5, 0x5a}, {0xa5, 0x5a}}, [][]byte{{0x5a, 0x5a}, {0xa5, 0x5a}}},
 	} {
 		m := &Map{m: c.before, keySize: 1, valSize: 1}
-		m.ReplaceKey([]byte{0xa5}, []byte{0x5a})
+		m.Rename([]byte{0xa5}, []byte{0x5a})
 
 		if !reflect.DeepEqual(m.m, c.after) {
-			t.Error("ReplaceKey failed")
+			t.Error("Rename failed")
 			t.Logf("expected: %02x", c.after)
 			t.Logf("got:      %02x", m.m)
 			t.Fatal()
