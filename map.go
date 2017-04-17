@@ -47,6 +47,12 @@ func NewWithCapacity(keySize, valSize, capacity int) *Map {
 	}
 }
 
+// Len returns the number of entries in the map. It does
+// not account for duplicates.
+func (m *Map) Len() int {
+	return len(m.m)
+}
+
 // Add appends a new entry to the map. It does not check
 // for duplicates, nor does it handle them.
 func (m *Map) Add(key, val []byte) {

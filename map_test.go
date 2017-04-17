@@ -10,6 +10,29 @@ import (
 	"testing"
 )
 
+func TestLen(t *testing.T) {
+	for _, c := range []struct {
+		m   [][]byte
+		len int
+	}{
+		{nil, 0},
+		{[][]byte{}, 0},
+		{[][]byte{{0, 0}}, 1},
+		{[][]byte{{0xa5, 0x5a}}, 1},
+		{[][]byte{{0, 0}, {0xa5, 0x5a}, {0, 0}}, 3},
+		{[][]byte{{0xa5, 0x5a}, {0x5a, 0xa5}}, 2},
+	} {
+		m := &Map{m: c.m, keySize: 1, valSize: 1}
+
+		if l := m.Len(); l != c.len {
+			t.Error("Len failed")
+			t.Logf("expected: %d", c.len)
+			t.Logf("got:      %d", l)
+			t.Fatal()
+		}
+	}
+}
+
 func TestAdd(t *testing.T) {
 	for _, c := range []struct{ before, after [][]byte }{
 		{nil, [][]byte{{0xa5, 0x5a}}},
