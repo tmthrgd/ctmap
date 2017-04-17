@@ -75,8 +75,8 @@ func (m *Map) Add(key, val []byte) {
 // It returns 1 if the key was present and the val set, 0
 // otherwise.
 //
-// If there are multiple entries with the same key, each
-// will have it's value set to val.
+// If there are multiple entries with the same key, only
+// the first entry will have it's value set to val.
 func (m *Map) Set(key, val []byte) int {
 	if len(key) != m.keySize {
 		panic("key has invalid size")
@@ -89,7 +89,7 @@ func (m *Map) Set(key, val []byte) int {
 	var v int
 
 	for _, entry := range m.m {
-		vv := subtle.ConstantTimeCompare(entry[:m.keySize], key)
+		vv := subtle.ConstantTimeCompare(entry[:m.keySize], key) &^ v
 		subtle.ConstantTimeCopy(vv, entry[m.keySize:], val)
 		v |= vv
 	}
