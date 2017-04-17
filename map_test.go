@@ -159,3 +159,37 @@ func TestLookup(t *testing.T) {
 		}
 	}
 }
+
+func TestDelete(t *testing.T) {
+	var zero [2]byte
+
+	for _, c := range []struct {
+		before, after [][]byte
+		v             int
+	}{
+		{nil, nil, 0},
+		{[][]byte{{0, 0}}, [][]byte{{0, 0}}, 0},
+		{[][]byte{{0x5a, 0x5a}}, [][]byte{{0x5a, 0x5a}}, 0},
+		{[][]byte{{0xa5, 0x5a}}, [][]byte{}, 1},
+		{[][]byte{{0x5a, 0x5a}, {0xa5, 0x5a}, {0x5a, 0x5a}}, [][]byte{{0x5a, 0x5a}, {0x5a, 0x5a}}, 1},
+		{[][]byte{{0xa5, 0x11}, {0xa5, 0x22}}, [][]byte{{0xa5, 0x22}}, 1},
+	} {
+		m := &Map{m: c.before, keySize: 1, valSize: 1}
+
+		v := m.Delete([]byte{0xa5})
+
+		if v != c.v || !reflect.DeepEqual(m.m, c.after) {
+			t.Error("Delete failed")
+			t.Logf("expected: %02x, %d", c.after, c.v)
+			t.Logf("got:      %02x, %d", m.m, v)
+			t.Fatal()
+		}
+
+		if v == 1 && !reflect.DeepEqual(m.m[:len(c.before)][len(m.m)], zero[:]) {
+			t.Error("Delete failed to zero removed item")
+			t.Logf("expected: %02x", zero[:])
+			t.Logf("got:      %02x", m.m[:len(c.before)][len(m.m)])
+			t.Fatal()
+		}
+	}
+}

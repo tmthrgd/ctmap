@@ -196,3 +196,60 @@ func (m *Map) Lookup(key, val []byte) int {
 
 	return v
 }
+
+// Delete removes an entry with a given key from the map.
+// It returns 1 if an entry was removed, 0 otherwise. The
+// removed entry is zeroed.
+//
+// If the map contains multiple entries with the same key,
+// only the first is removed.
+//
+// WARNING: Future calls to Add may leak the result of
+// Delete. To avoid this leak, use Replace instead with
+// zero, or sentinel, keys and values.
+func (m *Map) Delete(key []byte) int {
+	if len(key) != m.keySize {
+		panic("key has invalid size")
+	}
+
+	if len(m.m) == 0 {
+		return 0
+	}
+
+	var v int
+
+	for i, entry := range m.m[:len(m.m)-1] {
+		v |= subtle.ConstantTimeCompare(entry[:m.keySize], key)
+		subtle.ConstantTimeCopy(v, entry, m.m[i+1])
+	}
+
+	last := m.m[len(m.m)-1]
+	v |= subtle.ConstantTimeCompare(last[:m.keySize], key)
+
+	for i := range last {
+		last[i] &= byte(v - 1)
+	}
+
+	// The last entry in the list will not be garbage
+	// collected until the next call to Add, this leaks
+	// information about whether a key was removed or not.
+	// Allowing the entry to be garbage collected now, by
+	// setting the final entry to nil, would leak
+	// information. It also cannot be done in constant-time.
+	// Because of this, a memory leak is allowed to occur.
+	// Even though m.m is truncated bellow, it still contains
+	// a reference to the removed slice which prevents it
+	// from being garbage collected. When Add is next called,
+	// the append call will overwrite the reference and the
+	// slice will be garbage collected resulting in two
+	// separate timing leaks. One from the lack of need for
+	// append to allocate a larger m.m slice and from the
+	// eventual garbage collection. If Map was created with
+	// NewWithCapacity, the append call in Add may not leak
+	// any information in and of itself. That still leaves
+	// the information leak when the garbage collector runs.
+
+	// XXX: Hopefully this slice is constant-time.
+	m.m = m.m[:len(m.m)-v]
+	return v
+}
