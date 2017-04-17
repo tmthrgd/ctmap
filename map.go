@@ -204,9 +204,11 @@ func (m *Map) Lookup(key, val []byte) int {
 // If the map contains multiple entries with the same key,
 // only the first is removed.
 //
-// WARNING: Future calls to Add may leak the result of
-// Delete. To avoid this leak, use Replace instead with
-// zero, or sentinel, keys and values.
+// WARNING: The interaction between Delete and other methods
+// leaks timing information. In particular, if an entry was
+// removed the size of the map is reduced and the time taken
+// by other methods in this package will be reduced. If an
+// entry was not removed, then the time taken does not change.
 func (m *Map) Delete(key []byte) int {
 	if len(key) != m.keySize {
 		panic("key has invalid size")
@@ -231,26 +233,26 @@ func (m *Map) Delete(key []byte) int {
 	}
 
 	// The last entry in the list will not be garbage
-	// collected until the next call to Add, this leaks
+	// collected until the next call to Add, that will leak
 	// information about whether a key was removed or not.
 	// Allowing the entry to be garbage collected now, by
-	// setting the final entry to nil, would leak
-	// information. It also cannot be done in constant-time.
-	// Because of this, a memory leak is allowed to occur.
-	// Even though m.m is truncated bellow, it still contains
-	// a reference to the removed slice which prevents it
-	// from being garbage collected. When Add is next called,
-	// the append call will overwrite the reference and the
-	// slice will be garbage collected resulting in two
-	// separate timing leaks. One from the lack of need for
-	// append to allocate a larger m.m slice and from the
-	// eventual garbage collection. If Map was created with
-	// NewWithCapacity, the append call in Add may not leak
-	// any information in and of itself. That still leaves
-	// the information leak when the garbage collector runs.
+	// setting the final entry to nil, would leak timing
+	// information immediately. It is also an operation that
+	// cannot be done in constant-time. Because of this, a
+	// memory leak is tolerated. Even though m.m is truncated
+	// bellow, it still contains a reference to the removed
+	// slice which prevents it from being garbage collected.
+	// When Add is next called, the append call will overwrite
+	// the reference and the slice will be garbage collected
+	// resulting in a possible timing leak.
+	//
+	// By also reducing the backing slice's capacity, future
+	// calls to Add take a near constant-time regardless of
+	// whether an entry was removed. The time taken by Add
+	// will then only depend on the length of the map.
 
 	// XXX: Hopefully this slice is constant-time.
-	m.m = m.m[:len(m.m)-v]
+	m.m = m.m[:len(m.m)-v : cap(m.m)-v]
 
 	return v
 }

@@ -175,6 +175,7 @@ func TestDelete(t *testing.T) {
 		{[][]byte{{0xa5, 0x11}, {0xa5, 0x22}}, [][]byte{{0xa5, 0x22}}, 1},
 	} {
 		m := &Map{m: c.before, keySize: 1, valSize: 1}
+		mm := m.m
 
 		v := m.Delete([]byte{0xa5})
 
@@ -185,10 +186,10 @@ func TestDelete(t *testing.T) {
 			t.Fatal()
 		}
 
-		if v == 1 && !reflect.DeepEqual(m.m[:len(c.before)][len(m.m)], zero[:]) {
+		if v == 1 && !reflect.DeepEqual(mm[len(mm)-1], zero[:]) {
 			t.Error("Delete failed to zero removed item")
 			t.Logf("expected: %02x", zero[:])
-			t.Logf("got:      %02x", m.m[:len(c.before)][len(m.m)])
+			t.Logf("got:      %02x", mm[len(mm)-1])
 			t.Fatal()
 		}
 	}
